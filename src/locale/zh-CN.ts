@@ -5,6 +5,7 @@ import localeWorkplace from '@/views/dashboard/workplace/locale/zh-CN';
 /** simple */
 /** simple end */
 import localeSettings from './zh-CN/settings';
+import localeSys from './zh-CN/sys';
 
 export default {
   'menu.dashboard': '仪表盘',
@@ -18,6 +19,7 @@ export default {
   ...localeMessageBox,
   ...localeLogin,
   ...localeWorkplace,
+  ...localeSys,
   /** simple */
   /** simple end */
 };

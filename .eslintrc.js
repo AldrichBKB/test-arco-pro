@@ -72,6 +72,7 @@ module.exports = {
     'no-shadow':'off',
     'class-methods-use-this':'off',
     '@typescript-eslint/ban-types':'off',
-    'no-useless-escape':'off'
+    'no-useless-escape':'off',
+    '@typescript-eslint/no-non-null-assertion':'off'
   },
 };

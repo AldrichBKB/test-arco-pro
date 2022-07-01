@@ -1,3 +1,5 @@
+import { isObject } from './is';
+
 type TargetContext = '_self' | '_parent' | '_blank' | '_top';
 
 export const openWindow = (
@@ -22,14 +24,13 @@ export const regexUrl = new RegExp(
   'i'
 );
 
-// export function deepMerge<T = any>(src: any = {}, target: any = {}): T {
-//   let key: string;
-//   for (key in target) {
-//     src[key] = isObject(src[key])
-//       ? deepMerge(src[key], target[key])
-//       : (src[key] = target[key]);
-//   }
-//   return src;
-// }
+export function deepMerge<T = any>(src: any = {}, target: any = {}): T {
+  Object.keys(target).forEach((key: string) => {
+    src[key] = isObject(src[key])
+      ? deepMerge(src[key], target[key])
+      : (src[key] = target[key]);
+  });
+  return src;
+}
 
 export default null;

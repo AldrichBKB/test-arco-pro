@@ -5,6 +5,7 @@ import localeWorkplace from '@/views/dashboard/workplace/locale/en-US';
 /** simple */
 /** simple end */
 import localeSettings from './en-US/settings';
+import localeSys from './zh-CN/sys';
 
 export default {
   'menu.dashboard': 'Dashboard',
@@ -18,6 +19,7 @@ export default {
   ...localeMessageBox,
   ...localeLogin,
   ...localeWorkplace,
+  ...localeSys,
   /** simple */
   /** simple end */
 };
