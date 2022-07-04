@@ -1,3 +1,5 @@
+declare type Recordable<T = any> = Record<string, T>;
+
 export type ErrorMessageMode = 'none' | 'modal' | 'message' | undefined;
 
 export interface RequestOptions {

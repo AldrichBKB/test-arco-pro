@@ -42,6 +42,7 @@
 </template>
 
 <script lang="ts" setup>
+  import { onMounted } from 'vue';
   import { defHttp } from '@/utils/https';
   import Banner from './components/banner.vue';
   import DataPanel from './components/data-panel.vue';
@@ -54,7 +55,17 @@
   import Carousel from './components/carousel.vue';
   import Docs from './components/docs.vue';
 
-  console.log(defHttp);
+  onMounted(() => {
+    testHttp();
+  });
+
+  const testHttp = async () => {
+    try {
+      await defHttp.get({ url: 'http://crmv2.mabangerp.com/api/auth/login' });
+    } catch (error) {
+      console.log(error);
+    }
+  };
 </script>
 
 <script lang="ts">

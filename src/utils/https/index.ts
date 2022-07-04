@@ -1,12 +1,16 @@
-import { clone } from 'lodash-es';
-import { useI18n } from 'vue-i18n';
-import { deepMerge } from '@/utils';
 import type { AxiosResponse } from 'axios';
-import type { AxiosTransform, CreateAxiosOptions } from './axiosTransform';
-import type { RequestOptions, Result } from './axiosTypes';
+import type { RequestOptions, Result } from '@/types/axiosTypes';
+
+import { Message, Modal } from '@arco-design/web-vue';
+import { clone } from 'lodash-es';
+// import { useI18n } from 'vue-i18n';
+import { setObjToUrlParams, deepMerge } from '@/utils';
+import useUser from '@/hooks/user';
+import { isString } from '@/utils/is';
 import { VAxios } from './Axios';
-// RequestEnum, ResultEnum,
-import { ContentTypeEnum } from './httpEnum';
+import { ContentTypeEnum, ResultEnum, RequestEnum } from './httpEnum';
+import { joinTimestamp, formatRequestDate } from './helper';
+import type { AxiosTransform, CreateAxiosOptions } from './axiosTransform';
 
 /**
  * @description: 数据处理，方便区分多种处理方式
@@ -20,25 +24,122 @@ const transform: AxiosTransform = {
     res: AxiosResponse<Result>,
     options: RequestOptions
   ) => {
-    const { t } = useI18n();
-    console.log(t, 'ttttttttttttttttttttttttttttttttt');
+    // const { t } = useI18n();
     const { isTransformResponse, isReturnNativeResponse } = options;
     // 是否返回原生响应头 比如：需要获取响应头时使用该属性
     if (isReturnNativeResponse) {
       return res;
     }
+
     // 不进行任何处理，直接返回
     // 用于页面代码可能需要直接获取code，data，message这些信息时开启
     if (!isTransformResponse) {
       return res.data;
     }
+
     // 错误的时候返回
     const { data } = res;
     if (!data) {
       // return '[HTTP] Request has no return value';
-      throw new Error(t('sys.api.apiRequestFailed'));
+      throw new Error('请求出错，请稍候重试');
     }
-    return '123';
+
+    //  这里 code，result，message为 后台统一的字段，需要在 types.ts内修改为项目自己的接口返回格式
+    const { code, result, message } = data;
+
+    // 这里逻辑可以根据项目进行修改
+    const hasSuccess =
+      data && Reflect.has(data, 'code') && code === ResultEnum.SUCCESS;
+    if (hasSuccess) {
+      return result;
+    }
+
+    // 在此处根据自己项目的实际情况对不同的code执行不同的操作
+    // 如果不希望中断当前请求，请return数据，否则直接抛出异常即可
+    const { logout } = useUser();
+    let timeoutMsg = '';
+    switch (code) {
+      case ResultEnum.TIMEOUT:
+        timeoutMsg = '登录超时,请重新登录!';
+        logout();
+        break;
+      default:
+        if (message) {
+          timeoutMsg = message;
+        }
+    }
+
+    // errorMessageMode=‘modal’的时候会显示modal错误弹窗，而不是消息提示，用于一些比较重要的错误
+    // errorMessageMode='none' 一般是调用时明确表示不希望自动弹出错误提示
+    if (options.errorMessageMode === 'modal') {
+      Modal.error({ title: '错误提示', content: timeoutMsg });
+    } else if (options.errorMessageMode === 'message') {
+      Message.error(timeoutMsg);
+    }
+
+    throw new Error(timeoutMsg || '请求出错，请稍候重试');
+  },
+  // 请求之前处理config
+  beforeRequestHook: (config, options) => {
+    const {
+      apiUrl,
+      joinPrefix,
+      joinParamsToUrl,
+      formatDate,
+      joinTime = true,
+      urlPrefix,
+    } = options;
+
+    if (joinPrefix) {
+      config.url = `${urlPrefix}${config.url}`;
+    }
+
+    if (apiUrl && isString(apiUrl)) {
+      config.url = `${apiUrl}${config.url}`;
+    }
+
+    const params = config.params || {};
+    const data = config.data || false;
+    formatDate && data && !isString(data) && formatRequestDate(data);
+    if (config.method?.toUpperCase() === RequestEnum.GET) {
+      if (!isString(params)) {
+        // 给 get 请求加上时间戳参数，避免从缓存中拿数据。
+        config.params = Object.assign(
+          params || {},
+          joinTimestamp(joinTime, false)
+        );
+      } else {
+        // 兼容restful风格
+        config.url = `${config.url + params}${joinTimestamp(joinTime, true)}`;
+        config.params = undefined;
+      }
+    } else if (!isString(params)) {
+      formatDate && formatRequestDate(params);
+      if (
+        Reflect.has(config, 'data') &&
+        config.data &&
+        Object.keys(config.data).length > 0
+      ) {
+        config.data = data;
+        config.params = params;
+      } else {
+        // 非GET请求如果没有提供data，则将params视为data
+        config.data = params;
+        config.params = undefined;
+      }
+      if (joinParamsToUrl) {
+        config.url = setObjToUrlParams(config.url as string, {
+          ...config.params,
+          ...config.data,
+        });
+      }
+    } else {
+      // 兼容restful风格
+      config.url += params;
+      config.params = undefined;
+    }
+
+    return config;
   },
 };
 
@@ -51,8 +152,6 @@ function createAxios(opt?: Partial<CreateAxiosOptions>) {
         // authenticationScheme: 'Bearer',
         authenticationScheme: '',
         timeout: 10 * 1000,
-        // 基础接口地址
-        // baseURL: globSetting.apiUrl,
 
         headers: { 'Content-Type': ContentTypeEnum.JSON },
         // 如果是form-data格式

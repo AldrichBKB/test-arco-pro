@@ -33,4 +33,15 @@ export function deepMerge<T = any>(src: any = {}, target: any = {}): T {
   return src;
 }
 
+export function setObjToUrlParams(baseUrl: string, obj: any): string {
+  let parameters = '';
+  Object.keys(obj).forEach((key: string) => {
+    parameters += `${key}=${encodeURIComponent(obj[key])}&`;
+  });
+  parameters = parameters.replace(/&$/, '');
+  return /\?$/.test(baseUrl)
+    ? baseUrl + parameters
+    : baseUrl.replace(/\/?$/, '?') + parameters;
+}
+
 export default null;

@@ -8,9 +8,13 @@ import axios from 'axios';
 import qs from 'qs';
 import { isFunction } from '@/utils/is';
 import { cloneDeep } from 'lodash-es';
+import type {
+  RequestOptions,
+  Result,
+  UploadFileParams,
+} from '@/types/axiosTypes';
 import { AxiosCanceler } from './axiosCancel';
 import type { CreateAxiosOptions } from './axiosTransform';
-import type { RequestOptions, Result, UploadFileParams } from './types';
 import { ContentTypeEnum, RequestEnum } from './httpEnum';
 
 export * from './axiosTransform';
