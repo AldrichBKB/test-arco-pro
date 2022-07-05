@@ -141,6 +141,22 @@ const transform: AxiosTransform = {
 
     return config;
   },
+
+  /**
+   * @description: 请求拦截器处理
+   */
+  requestInterceptors: (config, options) => {
+    // 请求之前处理config
+    const token = getToken();
+    if (token && (config as Recordable)?.requestOptions?.withToken !== false) {
+      // jwt token
+      (config as Recordable).headers.Authorization =
+        options.authenticationScheme
+          ? `${options.authenticationScheme} ${token}`
+          : token;
+    }
+    return config;
+  },
 };
 
 function createAxios(opt?: Partial<CreateAxiosOptions>) {

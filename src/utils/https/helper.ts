@@ -2,8 +2,6 @@ import { isObject, isString } from '@/utils/is';
 
 const DATE_TIME_FORMAT = 'YYYY-MM-DD HH:mm:ss';
 
-declare type Recordable<T = any> = Record<string, T>;
-
 export function joinTimestamp<T extends boolean>(
   join: boolean,
   restful: T
