@@ -7,15 +7,20 @@ import { clone } from 'lodash-es';
 import { setObjToUrlParams, deepMerge } from '@/utils';
 import useUser from '@/hooks/user';
 import { isString } from '@/utils/is';
+import { ContentTypeEnum, ResultEnum, RequestEnum } from '@/enums/httpEnum';
+import { useGlobSetting } from '@/hooks/setting';
+import { getToken } from '../auth';
 import { VAxios } from './Axios';
-import { ContentTypeEnum, ResultEnum, RequestEnum } from './httpEnum';
 import { joinTimestamp, formatRequestDate } from './helper';
+import { checkStatus } from './checkStatus';
+import { AxiosRetry } from './axiosRetry';
 import type { AxiosTransform, CreateAxiosOptions } from './axiosTransform';
+
+const globSetting = useGlobSetting();
 
 /**
  * @description: 数据处理，方便区分多种处理方式
  */
-
 const transform: AxiosTransform = {
   /**
    * @description: 处理请求数据。如果数据不是预期格式，可直接抛出错误
@@ -157,6 +162,55 @@ const transform: AxiosTransform = {
     }
     return config;
   },
+
+  /**
+   * @description: 响应拦截器处理
+   */
+  responseInterceptors: (res: AxiosResponse<any>) => {
+    return res;
+  },
+
+  /**
+   * @description: 响应错误处理
+   */
+  responseInterceptorsCatch: (axiosInstance: AxiosResponse, error: any) => {
+    const { response, code, message, config } = error || {};
+    const errorMessageMode = config?.requestOptions?.errorMessageMode || 'none';
+    const msg: string = response?.data?.error?.message ?? '';
+    const err: string = error?.toString?.() ?? '';
+    let errMessage = '';
+
+    try {
+      if (code === 'ECONNABORTED' && message.indexOf('timeout') !== -1) {
+        errMessage = '接口请求超时,请刷新页面重试!';
+      }
+      if (err.includes('Network Error')) {
+        errMessage = '网络异常,请检查您的网络链接是否正常!';
+      }
+
+      if (errMessage) {
+        if (errorMessageMode === 'modal') {
+          Modal.error({ title: '错误提示', content: errMessage });
+        } else if (errorMessageMode === 'message') {
+          Message.error(errMessage);
+        }
+        return Promise.reject(error);
+      }
+    } catch (error) {
+      throw new Error(error as unknown as string);
+    }
+
+    checkStatus(error?.response?.status, msg, errorMessageMode);
+
+    // 添加自动重试机制 保险起见 只针对GET请求
+    const retryRequest = new AxiosRetry();
+    const { isOpenRetry } = config.requestOptions.retryRequest;
+    config.method?.toUpperCase() === RequestEnum.GET &&
+      isOpenRetry &&
+      // @ts-ignore
+      retryRequest.retry(axiosInstance, error);
+    return Promise.reject(error);
+  },
 };
 
 function createAxios(opt?: Partial<CreateAxiosOptions>) {
@@ -189,7 +243,7 @@ function createAxios(opt?: Partial<CreateAxiosOptions>) {
           // 消息提示类型
           errorMessageMode: 'message',
           // 接口地址
-          // !apiUrl: globSetting.apiUrl,
+          apiUrl: globSetting.apiUrl,
           // 接口拼接地址
           // !urlPrefix,
           //  是否加入时间戳
@@ -210,5 +264,4 @@ function createAxios(opt?: Partial<CreateAxiosOptions>) {
   );
 }
 
-// eslint-disable-next-line import/prefer-default-export
 export const defHttp = createAxios();

@@ -13,9 +13,9 @@ import type {
   Result,
   UploadFileParams,
 } from '@/types/axiosTypes';
+import { ContentTypeEnum, RequestEnum } from '@/enums/httpEnum';
 import { AxiosCanceler } from './axiosCancel';
 import type { CreateAxiosOptions } from './axiosTransform';
-import { ContentTypeEnum, RequestEnum } from './httpEnum';
 
 export * from './axiosTransform';
 
