@@ -1,5 +1,5 @@
 import type { AxiosResponse } from 'axios';
-import type { RequestOptions, Result } from '@/types/axiosTypes';
+import type { RequestOptions, Result } from '#/axios';
 
 import { Message, Modal } from '@arco-design/web-vue';
 import { clone } from 'lodash-es';
@@ -17,6 +17,7 @@ import { AxiosRetry } from './axiosRetry';
 import type { AxiosTransform, CreateAxiosOptions } from './axiosTransform';
 
 const globSetting = useGlobSetting();
+const { urlPrefix } = globSetting;
 
 /**
  * @description: 数据处理，方便区分多种处理方式
@@ -92,7 +93,6 @@ const transform: AxiosTransform = {
       joinParamsToUrl,
       formatDate,
       joinTime = true,
-      urlPrefix,
     } = options;
 
     if (joinPrefix) {
@@ -245,7 +245,7 @@ function createAxios(opt?: Partial<CreateAxiosOptions>) {
           // 接口地址
           apiUrl: globSetting.apiUrl,
           // 接口拼接地址
-          // !urlPrefix,
+          urlPrefix,
           //  是否加入时间戳
           joinTime: true,
           // 忽略重复请求

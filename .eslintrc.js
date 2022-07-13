@@ -76,5 +76,6 @@ module.exports = {
     '@typescript-eslint/no-non-null-assertion': 'off',
     'import/prefer-default-export': 'off',
     'no-underscore-dangle': 'off',
+    'no-nested-ternary': 'off',
   },
 };

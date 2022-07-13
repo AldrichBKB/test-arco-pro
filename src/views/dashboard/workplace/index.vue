@@ -61,7 +61,7 @@
 
   const testHttp = async () => {
     try {
-      await defHttp.get({ url: 'http://crmv2.mabangerp.com/api/auth/login' });
+      await defHttp.get({ url: '/auth/login' });
     } catch (error) {
       console.log(error);
     }
