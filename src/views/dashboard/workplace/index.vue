@@ -61,7 +61,7 @@
 
   const testHttp = async () => {
     try {
-      await defHttp.get({ url: '/auth/login' });
+      await defHttp.post({ url: '/auth/login' });
     } catch (error) {
       console.log(error);
     }

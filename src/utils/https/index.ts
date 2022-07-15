@@ -214,6 +214,7 @@ const transform: AxiosTransform = {
 };
 
 function createAxios(opt?: Partial<CreateAxiosOptions>) {
+  console.log(globSetting, '<<<<<<<<');
   return new VAxios(
     deepMerge(
       {

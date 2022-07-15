@@ -20,9 +20,33 @@
 </template>
 
 <script lang="ts" setup>
+  import { defHttp } from '@/utils/https';
+  import { onMounted } from 'vue';
   import Footer from '@/components/footer/index.vue';
   import LoginBanner from './components/banner.vue';
   import LoginForm from './components/login-form.vue';
+
+  onMounted(() => {
+    testHttp();
+  });
+
+  const testHttp = async () => {
+    const params = {
+      userName: 'admin',
+      passWord: '123456',
+    };
+    try {
+      await defHttp.get({
+        url: '/api/v4/groups/217/projects',
+        params,
+        headers: {
+          'PRIVATE-TOKEN': '422Wo-DwQPZ4_3xVLN78',
+        },
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
 </script>
 
 <style lang="less" scoped>
